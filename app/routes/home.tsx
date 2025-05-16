@@ -1,4 +1,16 @@
 import { useEffect, useReducer } from "react";
+import * as v from "valibot";
+import "~/styles/app.css";
+const ItemsSchema = v.object({
+  id: v.pipe(v.string(), v.transform(Number)),
+  name: v.string(),
+  img: v.pipe(v.string(), v.minLength(1)),
+  into: v.pipe(v.array(v.string())),
+  map: v.union([v.number(), v.string()]),
+  gold: v.union([v.number(), v.string()]),
+  stats: v.union([v.null(), v.string()]),
+  tags: v.union([v.null(), v.array(v.string())]),
+});
 
 const initialState = {
   lolItems: [],
@@ -8,6 +20,7 @@ const ACTION = {
   SET_ITEMS: "set_items",
 };
 
+//@ts-ignore
 function reducer(state, action) {
   switch (action.type) {
     case ACTION.SET_ITEMS: {
@@ -22,31 +35,62 @@ export default function () {
 
   useEffect(() => {
     async function fetchLolItems() {
-      const items = await fetch(
+      return await fetch(
         "https://ddragon.leagueoflegends.com/cdn/14.19.1/data/en_US/item.json",
-      ).then((response) => {
-        return response.json();
-      });
-      dispatch({ type: "set_items", dataItems: items.data });
+      )
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          console.log("DATA", data);
+          const CHAMPION_EXClUSIVE_ITEM_IDS = [
+            3599, 3600, 3330, 3901, 3902, 3903,
+          ];
+          const OBSIDIAN_EDGE_ID = 1040;
+          const SHATTERED_GUARD_ID = 2421;
 
-      console.log("DATA", items);
+          const FILTER_ID = [
+            ...CHAMPION_EXClUSIVE_ITEM_IDS,
+            OBSIDIAN_EDGE_ID,
+            SHATTERED_GUARD_ID,
+          ];
+
+          const items = Object.entries(data.data);
+          const lolItems = items
+            .map(([id, item]) => ({
+              id: Number(id),
+              name: item.name,
+              img: item.image.sprite,
+              into: item.into,
+              maps: item.maps[11],
+              gold: item.gold,
+              stats: item.stats,
+              tags: item.tags,
+            }))
+            .filter((item) => !FILTER_ID.includes(item.id));
+
+          dispatch({ type: "set_items", dataItems: lolItems });
+          console.log("lolItems", lolItems);
+        });
     }
     fetchLolItems();
   }, []);
 
-  console.log("State:", state);
+  console.log("state", state);
   return (
     <>
       <h1>Legue of Legends Shop</h1>
-      {state.lolItems.length > 0 ? (
-        state.lolItems.map((item) => (
-          <div key={item.name}>
-            <h3>{item.name}</h3>
-          </div>
-        ))
-      ) : (
-        <p>Without items...</p>
-      )}
+      <div className="container">
+        {state.lolItems.length > 0 ? (
+          state.lolItems.map((item) => (
+            <div key={item.id}>
+              <h3>{item.name}</h3>
+            </div>
+          ))
+        ) : (
+          <p>Without items...</p>
+        )}
+      </div>
     </>
   );
 }
