@@ -14,7 +14,7 @@ function reducer(state, action) {
       return { ...state, lolItems: action.dataItems };
     }
   }
-  throw Error("unknown");
+  throw Error("There has been an error in reducer function");
 }
 
 export default function () {
