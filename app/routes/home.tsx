@@ -34,8 +34,7 @@ export default function () {
     fetchLolItems();
   }, []);
 
-  console.log("Estado actual:", state);
-
+  console.log("State:", state);
   return (
     <>
       <h1>Legue of Legends Shop</h1>
@@ -46,7 +45,7 @@ export default function () {
           </div>
         ))
       ) : (
-        <p>Cargando items...</p>
+        <p>Without items...</p>
       )}
     </>
   );
