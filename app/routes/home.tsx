@@ -1,16 +1,26 @@
 import { useEffect, useReducer } from "react";
 import * as v from "valibot";
 import "~/styles/app.css";
+
+const GoldSchema = v.object({
+  base: v.number(),
+  purchasable: v.union([v.number(), v.string()]),
+  sell: v.pipe(v.number()),
+  total: v.pipe(v.number()),
+});
+type Gold = v.InferOutput<typeof GoldSchema>;
+
 const ItemsSchema = v.object({
   id: v.pipe(v.string(), v.transform(Number)),
-  name: v.string(),
-  img: v.pipe(v.string(), v.minLength(1)),
+  name: v.pipe(v.string(), v.minLength(1)),
+  image: v.pipe(v.string(), v.minLength(1)),
   into: v.pipe(v.array(v.string())),
-  map: v.union([v.number(), v.string()]),
-  gold: v.union([v.number(), v.string()]),
+  maps: v.union([v.number(), v.string()]),
+  gold: v.array(GoldSchema),
   stats: v.union([v.null(), v.string()]),
-  tags: v.union([v.null(), v.array(v.string())]),
+  tags: v.union([v.array(v.null()), v.array(v.string())]),
 });
+type Items = v.InferOutput<typeof ItemsSchema>;
 
 const initialState = {
   lolItems: [],
@@ -20,7 +30,6 @@ const ACTION = {
   SET_ITEMS: "set_items",
 };
 
-//@ts-ignore
 function reducer(state, action) {
   switch (action.type) {
     case ACTION.SET_ITEMS: {
@@ -56,6 +65,21 @@ export default function () {
           ];
 
           const items = Object.entries(data.data);
+          console.log("items", items);
+
+          function goldI(id: number) {
+            const itemId = items.find(([itemId]) => Number(itemId) === id);
+            if (itemId) {
+              const [, item] = itemId;
+              return {
+                base: item.gold.base,
+                purchasable: item.gold.purchasable,
+                sell: item.gold.sell,
+                total: item.gold.total,
+              };
+            }
+          }
+
           const lolItems = items
             .map(([id, item]) => ({
               id: Number(id),
@@ -63,7 +87,7 @@ export default function () {
               img: item.image.sprite,
               into: item.into,
               maps: item.maps[11],
-              gold: item.gold,
+              gold: goldI(Number(id)),
               stats: item.stats,
               tags: item.tags,
             }))
