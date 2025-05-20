@@ -72,7 +72,7 @@ export default function () {
             .map(([id, item]) => ({
               id: Number(id),
               name: item.name,
-              img: item.image.sprite,
+              img: item.image.full,
               into: item.into,
               maps: item.maps[11],
               gold: {
@@ -97,12 +97,19 @@ export default function () {
   console.log("state", state);
   return (
     <>
-      <h1>Legue of Legends Shop</h1>
+      <h1>League Of Legends Shop</h1>
       <div className="container">
         {state.lolItems.length > 0 ? (
           state.lolItems.map((item) => (
             <div key={item.id}>
-              <h3>{item.name}</h3>
+              <img
+                src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.img}`}
+                alt=""
+              />
+              <p>{item.name}</p>
+              <p>
+                <strong>{item.gold.base}</strong>{" "}
+              </p>
             </div>
           ))
         ) : (
