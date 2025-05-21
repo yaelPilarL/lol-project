@@ -4,23 +4,92 @@ import "~/styles/app.css";
 
 const GoldSchema = v.object({
   base: v.number(),
-  purchasable: v.union([v.number(), v.string()]),
-  sell: v.pipe(v.number()),
-  total: v.pipe(v.number()),
+  purchasable: v.boolean(),
+  sell: v.number(),
+  total: v.number(),
 });
-type Gold = v.InferOutput<typeof GoldSchema>;
 
-const ItemsSchema = v.object({
-  id: v.pipe(v.string(), v.transform(Number)),
-  name: v.pipe(v.string(), v.minLength(1)),
-  image: v.pipe(v.string(), v.minLength(1)),
-  into: v.pipe(v.array(v.string())),
-  maps: v.union([v.number(), v.string()]),
-  gold: v.pipe(GoldSchema),
-  stats: v.union([v.null(), v.number()]),
-  tags: v.union([v.array(v.null()), v.array(v.string())]),
+const ImageSchema = v.object({
+  full: v.string(),
+  group: v.string(),
+  h: v.number(),
+  sprite: v.string(),
+  w: v.number(),
+  x: v.number(),
+  y: v.number(),
 });
-type Items = v.InferOutput<typeof ItemsSchema>;
+
+const MapSchema = v.object({
+  11: v.boolean(),
+  12: v.boolean(),
+  21: v.boolean(),
+  22: v.boolean(),
+  30: v.boolean(),
+  33: v.boolean(),
+});
+
+const StatLiteralSchema = v.union([
+  v.literal("FlatMovementSpeedMod"),
+  v.literal("FlatHPPoolMod"),
+  v.literal("FlatCritChanceMod"),
+  v.literal("FlatMagicDamageMod"),
+  v.literal("FlatMPPoolMod"),
+  v.literal("FlatArmorMod"),
+  v.literal("FlatSpellBlockMod"),
+  v.literal("FlatPhysicalDamageMod"),
+  v.literal("PercentAttackSpeedMod"),
+  v.literal("PercentLifeStealMod"),
+  v.literal("FlatHPRegenMod"),
+  v.literal("PercentMovementSpeedMod"),
+]);
+const StatsSchema = v.record(StatLiteralSchema, v.number());
+
+const TagLiteralSchema = v.union([
+  v.literal("Boots"),
+  v.literal("ManaRegen"),
+  v.literal("HealthRegen"),
+  v.literal("Health"),
+  v.literal("CriticalStrike"),
+  v.literal("SpellDamage"),
+  v.literal("Mana"),
+  v.literal("Armor"),
+  v.literal("SpellBlock"),
+  v.literal("LifeSteal"),
+  v.literal("SpellVamp"),
+  v.literal("Jungle"),
+  v.literal("Damage"),
+  v.literal("Lane"),
+  v.literal("AttackSpeed"),
+  v.literal("OnHit"),
+  v.literal("Trinket"),
+  v.literal("Active"),
+  v.literal("Consumable"),
+  v.literal("CooldownReduction"),
+  v.literal("ArmorPenetration"),
+  v.literal("AbilityHaste"),
+  v.literal("Stealth"),
+  v.literal("Vision"),
+  v.literal("NonbootsMovement"),
+  v.literal("Tenacity"),
+  v.literal("MagicPenetration"),
+  v.literal("Aura"),
+  v.literal("Slow"),
+  v.literal("MagicResist"),
+  v.literal("GoldPer"),
+]);
+
+const IdSchema = v.pipe(v.string(), v.transform(Number));
+
+const ItemSchema = v.object({
+  id: IdSchema,
+  name: v.pipe(v.string(), v.minLength(1)),
+  image: ImageSchema,
+  into: v.optional(v.array(IdSchema)),
+  maps: MapSchema,
+  gold: GoldSchema,
+  stats: v.optional(StatsSchema),
+  tags: v.array(TagLiteralSchema),
+});
 
 const initialState = {
   lolItems: [],
@@ -31,7 +100,7 @@ const ACTION = {
 };
 
 //@ts-ignore
-function reducer(state, action) {
+function itemsReducer(state, action) {
   switch (action.type) {
     case ACTION.SET_ITEMS: {
       return { ...state, lolItems: action.dataItems };
@@ -41,7 +110,7 @@ function reducer(state, action) {
 }
 
 export default function () {
-  const [state, dispatch] = useReducer(reducer, initialState);
+  const [state, dispatch] = useReducer(itemsReducer, initialState);
 
   useEffect(() => {
     async function fetchLolItems() {
@@ -53,42 +122,29 @@ export default function () {
         })
         .then((data) => {
           console.log("DATA", data);
-          const CHAMPION_EXClUSIVE_ITEM_IDS = [
-            3599, 3600, 3330, 3901, 3902, 3903,
-          ];
-          const OBSIDIAN_EDGE_ID = 1040;
-          const SHATTERED_GUARD_ID = 2421;
-
-          const FILTER_ID = [
-            ...CHAMPION_EXClUSIVE_ITEM_IDS,
-            OBSIDIAN_EDGE_ID,
-            SHATTERED_GUARD_ID,
-          ];
 
           const items = Object.entries(data.data);
+
           console.log("items", items);
 
-          const lolItems = items
-            .map(([id, item]) => ({
-              id: Number(id),
-              name: item.name,
-              img: item.image.full,
-              into: item.into,
-              maps: item.maps[11],
-              gold: {
-                base: item.gold.base,
-                purchasable: item.gold.purchasable,
-                sell: item.gold.sell,
-                total: item.gold.total,
-              },
-              stats: item.stats,
-              tags: item.tags,
-            }))
-            .filter((item) => !FILTER_ID.includes(item.id))
-            .filter((item) => item.gold.purchasable === true);
+          const lolItems = items.map(([id, item]) => {
+            return { ...item, id };
+          });
+          console.log("itemId", lolItems);
 
-          dispatch({ type: "set_items", dataItems: lolItems });
-          console.log("lolItems", lolItems);
+          v.parse(v.array(ItemSchema), lolItems);
+
+          const statKeys = lolItems.flatMap((item) => {
+            return Object.keys(item.stats);
+          });
+          const uniqueStats = new Set(statKeys);
+
+          const tags = lolItems.flatMap((item) => {
+            return item.tags;
+          });
+          const uniqueTags = new Set(tags);
+
+          // dispatch({ type: "set_items", dataItems: lolItems });
         });
     }
     fetchLolItems();
@@ -98,37 +154,17 @@ export default function () {
   return (
     <>
       <h1>League Of Legends Shop</h1>
-      <div className="container">
+      {/* <div className="container">
         {state.lolItems.length > 0 ? (
           state.lolItems.map((item) => (
             <div key={item.id}>
-              <img
-                src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.img}`}
-                alt=""
-              />
               <p>{item.name}</p>
-              <p>
-                <strong>{item.gold.base}</strong>{" "}
-              </p>
             </div>
           ))
         ) : (
           <p>Without items...</p>
         )}
-      </div>
+      </div> */}
     </>
   );
 }
-
-// look for a better way for gold
-// function goldI(id: number) {
-//   const itemId = items.find(([itemId]) => Number(itemId) === id);
-//   if (itemId) {
-//     return [{
-//       base: item.gold.base,
-//       purchasable: item.gold.purchasable,
-//       sell: item.gold.sell,
-//       total: item.gold.total,
-//     }];
-//   }
-// }
