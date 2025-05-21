@@ -78,18 +78,38 @@ const TagLiteralSchema = v.union([
   v.literal("GoldPer"),
 ]);
 
-const IdSchema = v.pipe(v.string(), v.transform(Number));
-
 const ItemSchema = v.object({
-  id: IdSchema,
+  id: v.pipe(v.string(), v.transform(Number)),
   name: v.pipe(v.string(), v.minLength(1)),
   image: ImageSchema,
-  into: v.optional(v.array(IdSchema)),
+  into: v.optional(v.array(v.pipe(v.string(), v.transform(Number)))),
   maps: MapSchema,
   gold: GoldSchema,
   stats: v.optional(StatsSchema),
   tags: v.array(TagLiteralSchema),
 });
+type Item = v.InferOutput<typeof ItemSchema>;
+
+const ItemDetailsSchema = v.object({
+  name: v.pipe(v.string(), v.minLength(1)),
+  image: ImageSchema,
+  into: v.optional(v.array(v.string())),
+  maps: MapSchema,
+  gold: GoldSchema,
+  stats: v.optional(StatsSchema),
+  tags: v.array(TagLiteralSchema),
+});
+
+const ItemsResponseSchema = v.object({
+  type: v.literal("item"),
+  version: v.string(),
+  basic: v.any(),
+  data: v.record(v.string(), ItemDetailsSchema),
+  groups: v.array(v.any()),
+  tree: v.array(v.any()),
+});
+
+const DataSchema = v.tuple([v.string(), ItemDetailsSchema]);
 
 const initialState = {
   lolItems: [],
@@ -99,8 +119,10 @@ const ACTION = {
   SET_ITEMS: "set_items",
 };
 
-//@ts-ignore
-function itemsReducer(state, action) {
+type State = { lolItems: Item[] };
+type Action = { type: "set_items"; dataItems: Item[] };
+
+function itemsReducer(state: State, action: Action) {
   switch (action.type) {
     case ACTION.SET_ITEMS: {
       return { ...state, lolItems: action.dataItems };
@@ -121,30 +143,30 @@ export default function () {
           return response.json();
         })
         .then((data) => {
-          console.log("DATA", data);
+          const itemsData = v.parse(ItemsResponseSchema, data);
 
-          const items = Object.entries(data.data);
+          const dataSchema = v.parse(
+            v.array(DataSchema),
+            Object.entries(itemsData.data),
+          );
 
-          console.log("items", items);
-
-          const lolItems = items.map(([id, item]) => {
+          const lolItemsId = dataSchema.map(([id, item]) => {
             return { ...item, id };
           });
-          console.log("itemId", lolItems);
 
-          v.parse(v.array(ItemSchema), lolItems);
+          const lolItems = v.parse(v.array(ItemSchema), lolItemsId);
 
-          const statKeys = lolItems.flatMap((item) => {
-            return Object.keys(item.stats);
-          });
-          const uniqueStats = new Set(statKeys);
+          // const statKeys = lolItems.flatMap((item) => {
+          //   return Object.keys(item.stats ?? {});
+          // });
+          // const uniqueStats = new Set(statKeys);
 
-          const tags = lolItems.flatMap((item) => {
-            return item.tags;
-          });
-          const uniqueTags = new Set(tags);
+          // const tags = lolItems.flatMap((item) => {
+          //   return item.tags;
+          // });
+          // const uniqueTags = new Set(tags);
 
-          // dispatch({ type: "set_items", dataItems: lolItems });
+          dispatch({ type: "set_items", dataItems: lolItems });
         });
     }
     fetchLolItems();
@@ -154,17 +176,21 @@ export default function () {
   return (
     <>
       <h1>League Of Legends Shop</h1>
-      {/* <div className="container">
+      <div className="container">
         {state.lolItems.length > 0 ? (
           state.lolItems.map((item) => (
             <div key={item.id}>
+              <img
+                src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
+                alt="{item.name}"
+              />
               <p>{item.name}</p>
             </div>
           ))
         ) : (
           <p>Without items...</p>
         )}
-      </div> */}
+      </div>
     </>
   );
 }
