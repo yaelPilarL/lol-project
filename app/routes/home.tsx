@@ -154,7 +154,26 @@ export default function () {
             return { ...item, id };
           });
 
-          const lolItems = v.parse(v.array(ItemSchema), lolItemsId);
+          const CHAMPION_EXClUSIVE_ITEM_IDS = [
+            3599, 3600, 3330, 3901, 3902, 3903,
+          ];
+          const OBSIDIAN_EDGE_ID = 1040;
+          const SHATTERED_GUARD_ID = 2421;
+
+          const FILTER_ID = [
+            ...CHAMPION_EXClUSIVE_ITEM_IDS,
+            OBSIDIAN_EDGE_ID,
+            SHATTERED_GUARD_ID,
+          ];
+
+          const lolItems = v
+            .parse(v.array(ItemSchema), lolItemsId)
+            .filter(
+              (item) =>
+                item.maps[11] === true &&
+                item.gold.purchasable === true &&
+                !FILTER_ID.includes(item.id),
+            );
 
           // const statKeys = lolItems.flatMap((item) => {
           //   return Object.keys(item.stats ?? {});
@@ -185,6 +204,9 @@ export default function () {
                 alt="{item.name}"
               />
               <p>{item.name}</p>
+              <p>
+                <b>{item.gold.base}</b>
+              </p>
             </div>
           ))
         ) : (
