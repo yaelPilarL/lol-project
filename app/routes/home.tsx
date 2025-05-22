@@ -143,6 +143,7 @@ export default function () {
           return response.json();
         })
         .then((data) => {
+          console.log("data", data);
           const itemsData = v.parse(ItemsResponseSchema, data);
 
           const dataSchema = v.parse(
@@ -190,6 +191,16 @@ export default function () {
     }
     fetchLolItems();
   }, []);
+
+  useEffect(() => {
+    async function fetchCatagories() {
+      return await fetch(
+        "https://ddragon.leagueoflegends.com/cdn/14.19.1/data/en_US/item.json",
+      ).then((response) => {
+        return response.json();
+      });
+    }
+  });
 
   console.log("state", state);
   return (
