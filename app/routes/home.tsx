@@ -100,12 +100,18 @@ const ItemDetailsSchema = v.object({
   tags: v.array(TagLiteralSchema),
 });
 
+const GroupSchema = v.object({
+  id: v.string(),
+  MaxGroupOwnable: v.string(),
+});
+type Group = v.InferOutput<typeof GroupSchema>;
+
 const ItemsResponseSchema = v.object({
   type: v.literal("item"),
   version: v.string(),
   basic: v.any(),
   data: v.record(v.string(), ItemDetailsSchema),
-  groups: v.array(v.any()),
+  groups: v.array(GroupSchema),
   tree: v.array(v.any()),
 });
 
@@ -113,19 +119,29 @@ const DataSchema = v.tuple([v.string(), ItemDetailsSchema]);
 
 const initialState = {
   lolItems: [],
+  lolGroups: [],
+  filterByGroup: [],
 };
 
 const ACTION = {
   SET_ITEMS: "set_items",
-};
+  SET_GROUPS: "set_groups",
+  FILTER_BY_GROUPS: "filter_by_group",
+} as const;
 
-type State = { lolItems: Item[] };
-type Action = { type: "set_items"; dataItems: Item[] };
+type State = { lolItems: Item[]; lolGroups: Group[]; filterByGroup };
+
+type Action =
+  | { type: "set_items"; dataItems: Item[] }
+  | { type: "set_groups"; groupItems: Group[] };
 
 function itemsReducer(state: State, action: Action) {
   switch (action.type) {
     case ACTION.SET_ITEMS: {
       return { ...state, lolItems: action.dataItems };
+    }
+    case ACTION.SET_GROUPS: {
+      return { ...state, lolGroups: action.groupItems };
     }
   }
   throw Error("There has been an error in reducer function");
@@ -143,7 +159,6 @@ export default function () {
           return response.json();
         })
         .then((data) => {
-          console.log("data", data);
           const itemsData = v.parse(ItemsResponseSchema, data);
 
           const dataSchema = v.parse(
@@ -196,11 +211,24 @@ export default function () {
     async function fetchCatagories() {
       return await fetch(
         "https://ddragon.leagueoflegends.com/cdn/14.19.1/data/en_US/item.json",
-      ).then((response) => {
-        return response.json();
-      });
+      )
+        .then((response) => {
+          return response.json();
+        })
+        .then((data) => {
+          const itemsData = v.parse(ItemsResponseSchema, data);
+
+          const groupsData = v.parse(v.array(GroupSchema), itemsData.groups);
+
+          dispatch({ type: "set_groups", groupItems: groupsData });
+        });
     }
-  });
+    fetchCatagories();
+  }, []);
+
+  useEffect(() => {
+    filterByGroup(state.lolItems, state.lolGroups);
+  }, [state.lolItems, state.lolGroups]);
 
   console.log("state", state);
   return (
@@ -226,4 +254,9 @@ export default function () {
       </div>
     </>
   );
+}
+
+function filterByGroup(lolItems: Item[], lolGroups: Group[]) {
+  const general = [...lolGroups, ...lolItems];
+  console.log("general", general);
 }
