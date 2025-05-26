@@ -120,16 +120,14 @@ const DataSchema = v.tuple([v.string(), ItemDetailsSchema]);
 const initialState = {
   lolItems: [],
   lolGroups: [],
-  filterByGroup: [],
 };
 
 const ACTION = {
   SET_ITEMS: "set_items",
   SET_GROUPS: "set_groups",
-  FILTER_BY_GROUPS: "filter_by_group",
 } as const;
 
-type State = { lolItems: Item[]; lolGroups: Group[]; filterByGroup };
+type State = { lolItems: Item[]; lolGroups: Group[] };
 
 type Action =
   | { type: "set_items"; dataItems: Item[] }
@@ -226,11 +224,6 @@ export default function () {
     fetchCatagories();
   }, []);
 
-  useEffect(() => {
-    filterByGroup(state.lolItems, state.lolGroups);
-  }, [state.lolItems, state.lolGroups]);
-
-  console.log("state", state);
   return (
     <>
       <h1>League Of Legends Shop</h1>
@@ -254,9 +247,4 @@ export default function () {
       </div>
     </>
   );
-}
-
-function filterByGroup(lolItems: Item[], lolGroups: Group[]) {
-  const general = [...lolGroups, ...lolItems];
-  console.log("general", general);
 }
