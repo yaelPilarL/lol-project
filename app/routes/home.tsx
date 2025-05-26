@@ -87,6 +87,7 @@ const ItemSchema = v.object({
   gold: GoldSchema,
   stats: v.optional(StatsSchema),
   tags: v.array(TagLiteralSchema),
+  consumed: v.optional(v.boolean()),
 });
 type Item = v.InferOutput<typeof ItemSchema>;
 
@@ -98,6 +99,7 @@ const ItemDetailsSchema = v.object({
   gold: GoldSchema,
   stats: v.optional(StatsSchema),
   tags: v.array(TagLiteralSchema),
+  consumed: v.optional(v.boolean()),
 });
 
 const GroupSchema = v.object({
@@ -142,7 +144,6 @@ function itemsReducer(state: State, action: Action) {
       return { ...state, lolGroups: action.groupItems };
     }
   }
-  throw Error("There has been an error in reducer function");
 }
 
 export default function () {
@@ -187,17 +188,8 @@ export default function () {
                 item.maps[11] === true &&
                 item.gold.purchasable === true &&
                 !FILTER_ID.includes(item.id),
-            );
-
-          // const statKeys = lolItems.flatMap((item) => {
-          //   return Object.keys(item.stats ?? {});
-          // });
-          // const uniqueStats = new Set(statKeys);
-
-          // const tags = lolItems.flatMap((item) => {
-          //   return item.tags;
-          // });
-          // const uniqueTags = new Set(tags);
+            )
+            .sort((a, b) => a.gold.base - b.gold.base);
 
           dispatch({ type: "set_items", dataItems: lolItems });
         });
@@ -214,6 +206,7 @@ export default function () {
           return response.json();
         })
         .then((data) => {
+          console.log("DATA", data);
           const itemsData = v.parse(ItemsResponseSchema, data);
 
           const groupsData = v.parse(v.array(GroupSchema), itemsData.groups);
@@ -224,27 +217,68 @@ export default function () {
     fetchCatagories();
   }, []);
 
+  const boots = filterBoots(state.lolItems);
+  const consumables = filterConsumables(state.lolItems);
+  const starters = filterStarter(state.lolItems);
+
   return (
     <>
       <h1>League Of Legends Shop</h1>
       <div className="container">
         {state.lolItems.length > 0 ? (
-          state.lolItems.map((item) => (
-            <div key={item.id}>
-              <img
-                src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
-                alt="{item.name}"
-              />
-              <p>{item.name}</p>
-              <p>
-                <b>{item.gold.base}</b>
-              </p>
-            </div>
-          ))
+          <>
+            <h2>Boots</h2>
+            <ul>{boots.map((item) => Card(item))}</ul>
+            <h2>Consumable</h2>
+            <ul>{consumables.map((item) => Card(item))}</ul>
+
+            <h2>Starter</h2>
+            <ul>{starters.map((item) => Card(item))}</ul>
+          </>
         ) : (
           <p>Without items...</p>
         )}
       </div>
     </>
   );
+}
+
+function Card(item: Item) {
+  return (
+    <li className="item-card">
+      <section>
+        <img
+          src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
+          alt={item.name}
+        />
+        <p className="item-name">{item.name}</p>
+        <p className="item-gold">
+          <b>{item.gold.base}</b>
+        </p>
+      </section>
+    </li>
+  );
+}
+
+function filterBoots(lolItems: Item[]) {
+  const boots = lolItems.filter((item) => item.tags.includes("Boots"));
+  return boots;
+}
+
+function filterConsumables(lolItems: Item[]) {
+  const consumable = lolItems.filter(
+    (item) =>
+      item.tags.includes("Consumable") ||
+      (item.consumed === true && item.stats === null) ||
+      (item.gold.base === 0 && item.gold.sell === 0),
+  );
+  return consumable;
+}
+
+function filterStarter(lolItems: Item[]) {
+  const starters = lolItems.filter(
+    (item) => item.gold.base === item.gold.total && item.gold.base > 0,
+  );
+
+  return starters;
 }
