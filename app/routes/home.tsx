@@ -88,6 +88,8 @@ const ItemSchema = v.object({
   stats: v.optional(StatsSchema),
   tags: v.array(TagLiteralSchema),
   consumed: v.optional(v.boolean()),
+  from: v.optional(v.array(v.pipe(v.string(), v.transform(Number)))),
+  depth: v.optional(v.number()),
 });
 type Item = v.InferOutput<typeof ItemSchema>;
 
@@ -100,6 +102,8 @@ const ItemDetailsSchema = v.object({
   stats: v.optional(StatsSchema),
   tags: v.array(TagLiteralSchema),
   consumed: v.optional(v.boolean()),
+  from: v.optional(v.array(v.string())),
+  depth: v.optional(v.number()),
 });
 
 const GroupSchema = v.object({
@@ -151,6 +155,7 @@ export default function () {
           return response.json();
         })
         .then((data) => {
+          console.log("DATA", data);
           const itemsData = v.parse(ItemsResponseSchema, data);
 
           const dataSchema = v.parse(
@@ -193,6 +198,7 @@ export default function () {
   const boots = filterBoots(state.lolItems);
   const consumables = filterConsumables(state.lolItems);
   const starters = filterStarter(state.lolItems);
+  const basics = filterBasic(state.lolItems);
 
   return (
     <>
@@ -208,6 +214,9 @@ export default function () {
 
             <h2>Starter</h2>
             <ul>{starters.map((item) => Card(item))}</ul>
+
+            <h2>Basic</h2>
+            <ul>{basics.map((item) => Card(item))}</ul>
           </>
         ) : (
           <p>Without items...</p>
@@ -235,27 +244,32 @@ function Card(item: Item) {
 }
 
 function filterBoots(lolItems: Item[]) {
-  const boots = lolItems.filter((item) => item.tags.includes("Boots"));
-  return boots;
+  return lolItems.filter((item) => item.tags.includes("Boots"));
 }
 
 function filterConsumables(lolItems: Item[]) {
-  const consumable = lolItems.filter(
+  return lolItems.filter(
     (item) =>
       item.tags.includes("Consumable") ||
-      (item.consumed === true && item.stats === null) ||
+      (item.consumed === true && !item.stats) ||
       (item.gold.base === 0 && item.gold.sell === 0),
   );
-  return consumable;
 }
 
 function filterStarter(lolItems: Item[]) {
-  const starters = lolItems.filter(
+  return lolItems.filter(
     (item) =>
       item.gold.base === item.gold.total &&
       item.gold.base > 300 &&
       item.gold.base < 500,
   );
+}
 
-  return starters;
+function filterBasic(lolItems: Item[]) {
+  return lolItems.filter(
+    (item) =>
+      (!item.from || item.from.length === 0) &&
+      item.gold.total === item.gold.base &&
+      item.gold.base >= 200,
+  );
 }
