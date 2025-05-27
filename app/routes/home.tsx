@@ -257,12 +257,10 @@ function filterConsumables(lolItems: Item[]) {
 }
 
 function filterStarter(lolItems: Item[]) {
-  return lolItems.filter(
-    (item) =>
-      item.gold.base === item.gold.total &&
-      item.gold.base > 300 &&
-      item.gold.base < 500,
-  );
+  const STARTER_ITEMS_IDS = [
+    1054, 1055, 1056, 1082, 1083, 1101, 1102, 1103, 3070, 3865,
+  ];
+  return lolItems.filter((item) => STARTER_ITEMS_IDS.includes(item.id));
 }
 
 function filterBasic(lolItems: Item[]) {
