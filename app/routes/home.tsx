@@ -121,27 +121,20 @@ const DataSchema = v.tuple([v.string(), ItemDetailsSchema]);
 
 const initialState = {
   lolItems: [],
-  lolGroups: [],
 };
 
 const ACTION = {
   SET_ITEMS: "set_items",
-  SET_GROUPS: "set_groups",
 } as const;
 
-type State = { lolItems: Item[]; lolGroups: Group[] };
+type State = { lolItems: Item[] };
 
-type Action =
-  | { type: "set_items"; dataItems: Item[] }
-  | { type: "set_groups"; groupItems: Group[] };
+type Action = { type: "set_items"; dataItems: Item[] };
 
 function itemsReducer(state: State, action: Action) {
   switch (action.type) {
     case ACTION.SET_ITEMS: {
       return { ...state, lolItems: action.dataItems };
-    }
-    case ACTION.SET_GROUPS: {
-      return { ...state, lolGroups: action.groupItems };
     }
   }
 }
@@ -197,26 +190,6 @@ export default function () {
     fetchLolItems();
   }, []);
 
-  useEffect(() => {
-    async function fetchCatagories() {
-      return await fetch(
-        "https://ddragon.leagueoflegends.com/cdn/14.19.1/data/en_US/item.json",
-      )
-        .then((response) => {
-          return response.json();
-        })
-        .then((data) => {
-          console.log("DATA", data);
-          const itemsData = v.parse(ItemsResponseSchema, data);
-
-          const groupsData = v.parse(v.array(GroupSchema), itemsData.groups);
-
-          dispatch({ type: "set_groups", groupItems: groupsData });
-        });
-    }
-    fetchCatagories();
-  }, []);
-
   const boots = filterBoots(state.lolItems);
   const consumables = filterConsumables(state.lolItems);
   const starters = filterStarter(state.lolItems);
@@ -229,6 +202,7 @@ export default function () {
           <>
             <h2>Boots</h2>
             <ul>{boots.map((item) => Card(item))}</ul>
+
             <h2>Consumable</h2>
             <ul>{consumables.map((item) => Card(item))}</ul>
 
@@ -245,7 +219,7 @@ export default function () {
 
 function Card(item: Item) {
   return (
-    <li className="item-card">
+    <li key={item.id} className="item-card">
       <section>
         <img
           src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
@@ -277,7 +251,10 @@ function filterConsumables(lolItems: Item[]) {
 
 function filterStarter(lolItems: Item[]) {
   const starters = lolItems.filter(
-    (item) => item.gold.base === item.gold.total && item.gold.base > 0,
+    (item) =>
+      item.gold.base === item.gold.total &&
+      item.gold.base > 300 &&
+      item.gold.base < 500,
   );
 
   return starters;
