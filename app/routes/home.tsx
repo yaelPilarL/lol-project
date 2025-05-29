@@ -87,9 +87,10 @@ const ItemSchema = v.object({
   gold: GoldSchema,
   stats: v.optional(StatsSchema),
   tags: v.array(TagLiteralSchema),
-
   from: v.optional(v.array(v.pipe(v.string(), v.transform(Number)))),
   depth: v.optional(v.number()),
+  consumed: v.optional(v.boolean()),
+  consumeOnFull: v.optional(v.boolean()),
 });
 type Item = v.InferOutput<typeof ItemSchema>;
 
@@ -103,6 +104,7 @@ const ItemDetailsSchema = v.object({
   tags: v.array(TagLiteralSchema),
   from: v.optional(v.array(v.string())),
   depth: v.optional(v.number()),
+  consumeOnFull: v.optional(v.boolean()),
 });
 
 const GroupSchema = v.object({
@@ -186,7 +188,7 @@ export default function () {
                 item.gold.purchasable === true &&
                 !FILTER_ID.includes(item.id),
             )
-            .sort((a, b) => a.gold.base - b.gold.base);
+            .sort((a, b) => a.gold.total - b.gold.total);
 
           dispatch({ type: "set_items", dataItems: lolItems });
         });
@@ -197,7 +199,9 @@ export default function () {
   const boots = filterBoots(state.lolItems);
   const consumables = filterConsumables(state.lolItems);
   const starters = filterStarter(state.lolItems);
-  const basics = filterBasics(state.lolItems);
+  const basics = filterBasic(state.lolItems);
+  const epics = filterEpic(state.lolItems);
+  const legendaries = filterLengedary(state.lolItems);
 
   return (
     <>
@@ -205,17 +209,23 @@ export default function () {
       <div className="container">
         {state.lolItems.length > 0 ? (
           <>
-            <h2>Boots</h2>
+            {/* <h2>Boots</h2>
             <ul>{boots.map((item) => Card(item))}</ul>
 
             <h2>Consumable</h2>
-            <ul>{consumables.map((item) => Card(item))}</ul>
+            <ul>{consumables.map((item) => Card(item))}</ul> */}
 
             <h2>Starter</h2>
             <ul>{starters.map((item) => Card(item))}</ul>
 
-            <h2>Basic</h2>
+            {/* <h2>Basic</h2>
             <ul>{basics.map((item) => Card(item))}</ul>
+
+            <h2>Epic</h2>
+            <ul>{epics.map((item) => Card(item))}</ul>
+
+            <h2>Legendary</h2>
+            <ul>{legendaries.map((item) => Card(item))}</ul> */}
           </>
         ) : (
           <p>Without items...</p>
@@ -235,7 +245,7 @@ function Card(item: Item) {
         />
         <p className="item-name">{item.name}</p>
         <p className="item-gold">
-          <b>{item.gold.base}</b>
+          <b>{item.gold.total}</b>
         </p>
       </section>
     </li>
@@ -277,7 +287,7 @@ function filterStarter(lolItems: Item[]) {
   return uniqueStarterItems;
 }
 
-function filterBasics(lolItems: Item[]) {
+function filterBasic(lolItems: Item[]) {
   return lolItems
     .filter((item) => {
       return !item.from;
@@ -289,6 +299,35 @@ function filterBasics(lolItems: Item[]) {
       return item.into && item.into.length >= 3;
     })
     .filter((item) => {
-      return item.stats && item.stats.FlatMPPoolMod !== 240;
+      return !(item.tags.includes("Mana") && item.tags.includes("ManaRegen"));
+    });
+}
+
+function filterEpic(lolItems: Item[]) {
+  return lolItems
+    .filter((item) => {
+      return item.depth === 2 || item.consumeOnFull === true;
+    })
+    .filter((item) => {
+      return item.consumeOnFull === true || (item.into && item.from);
+    })
+    .filter((item) => {
+      return !item.tags.includes("Boots");
+    })
+    .filter((item) => {
+      return !(item.stats && item.stats.FlatHPPoolMod === 250);
+    });
+}
+
+function filterLengedary(lolItems: Item[]) {
+  return lolItems
+    .filter((item) => {
+      return !item.into && item.from;
+    })
+    .filter((item) => {
+      return item.depth === 2 || item.depth === 3;
+    })
+    .filter((item) => {
+      return !item.tags.includes("Boots");
     });
 }
