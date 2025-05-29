@@ -87,7 +87,7 @@ const ItemSchema = v.object({
   gold: GoldSchema,
   stats: v.optional(StatsSchema),
   tags: v.array(TagLiteralSchema),
-  consumed: v.optional(v.boolean()),
+
   from: v.optional(v.array(v.pipe(v.string(), v.transform(Number)))),
   depth: v.optional(v.number()),
 });
@@ -101,7 +101,6 @@ const ItemDetailsSchema = v.object({
   gold: GoldSchema,
   stats: v.optional(StatsSchema),
   tags: v.array(TagLiteralSchema),
-  consumed: v.optional(v.boolean()),
   from: v.optional(v.array(v.string())),
   depth: v.optional(v.number()),
 });
@@ -198,7 +197,7 @@ export default function () {
   const boots = filterBoots(state.lolItems);
   const consumables = filterConsumables(state.lolItems);
   const starters = filterStarter(state.lolItems);
-  const basics = filterBasic(state.lolItems);
+  const basics = filterBasics(state.lolItems);
 
   return (
     <>
@@ -251,23 +250,45 @@ function filterConsumables(lolItems: Item[]) {
   return lolItems.filter(
     (item) =>
       item.tags.includes("Consumable") ||
-      (item.consumed === true && !item.stats) ||
+      !item.stats ||
       (item.gold.base === 0 && item.gold.sell === 0),
   );
 }
 
 function filterStarter(lolItems: Item[]) {
-  const STARTER_ITEMS_IDS = [
-    1054, 1055, 1056, 1082, 1083, 1101, 1102, 1103, 3070, 3865,
-  ];
-  return lolItems.filter((item) => STARTER_ITEMS_IDS.includes(item.id));
+  const tagsInclude = ["Lane", "Jungle"];
+  const tagsExclude = ["Consumable"];
+
+  const starterItems = lolItems
+    .filter((item) => {
+      return item.tags.some((tag) => tagsInclude.includes(tag));
+    })
+    .filter((item) => {
+      return !item.tags.some((tag) => tagsExclude.includes(tag));
+    })
+    .filter((item) => {
+      return !item.from && item.gold.base > 0;
+    });
+
+  const uniqueStarterItems = Array.from(
+    new Map(starterItems.map((item) => [item.name, item])).values(),
+  );
+
+  return uniqueStarterItems;
 }
 
-function filterBasic(lolItems: Item[]) {
-  return lolItems.filter(
-    (item) =>
-      (!item.from || item.from.length === 0) &&
-      item.gold.total === item.gold.base &&
-      item.gold.base >= 200,
-  );
+function filterBasics(lolItems: Item[]) {
+  return lolItems
+    .filter((item) => {
+      return !item.from;
+    })
+    .filter((item) => {
+      return !item.tags.includes("Boots");
+    })
+    .filter((item) => {
+      return item.into && item.into.length >= 3;
+    })
+    .filter((item) => {
+      return item.stats && item.stats.FlatMPPoolMod !== 240;
+    });
 }
