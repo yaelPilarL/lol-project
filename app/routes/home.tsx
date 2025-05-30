@@ -196,12 +196,12 @@ export default function () {
     fetchLolItems();
   }, []);
 
-  const boots = filterBoots(state.lolItems);
-  const consumables = filterConsumables(state.lolItems);
-  const starters = filterStarter(state.lolItems);
-  const basics = filterBasic(state.lolItems);
-  const epics = filterEpic(state.lolItems);
-  const legendaries = filterLengedary(state.lolItems);
+  const bootItems = getBootItems(state.lolItems);
+  const consumableItems = getConsumableItems(state.lolItems);
+  const starterItems = getStarterItems(state.lolItems);
+  const basicItems = getBasicItems(state.lolItems);
+  const epicItems = getEpicItems(state.lolItems);
+  const legendaryItems = getLengedaryItems(state.lolItems);
 
   return (
     <>
@@ -209,23 +209,23 @@ export default function () {
       <div className="container">
         {state.lolItems.length > 0 ? (
           <>
-            {/* <h2>Boots</h2>
-            <ul>{boots.map((item) => Card(item))}</ul>
+            <h2>Boots</h2>
+            <ul>{bootItems.map((item) => Card(item))}</ul>
 
             <h2>Consumable</h2>
-            <ul>{consumables.map((item) => Card(item))}</ul> */}
+            <ul>{consumableItems.map((item) => Card(item))}</ul>
 
             <h2>Starter</h2>
-            <ul>{starters.map((item) => Card(item))}</ul>
+            <ul>{starterItems.map((item) => Card(item))}</ul>
 
-            {/* <h2>Basic</h2>
-            <ul>{basics.map((item) => Card(item))}</ul>
+            <h2>Basic</h2>
+            <ul>{basicItems.map((item) => Card(item))}</ul>
 
             <h2>Epic</h2>
-            <ul>{epics.map((item) => Card(item))}</ul>
+            <ul>{epicItems.map((item) => Card(item))}</ul>
 
             <h2>Legendary</h2>
-            <ul>{legendaries.map((item) => Card(item))}</ul> */}
+            <ul>{legendaryItems.map((item) => Card(item))}</ul>
           </>
         ) : (
           <p>Without items...</p>
@@ -252,11 +252,11 @@ function Card(item: Item) {
   );
 }
 
-function filterBoots(lolItems: Item[]) {
+function getBootItems(lolItems: Item[]) {
   return lolItems.filter((item) => item.tags.includes("Boots"));
 }
 
-function filterConsumables(lolItems: Item[]) {
+function getConsumableItems(lolItems: Item[]) {
   return lolItems.filter(
     (item) =>
       item.tags.includes("Consumable") ||
@@ -265,7 +265,7 @@ function filterConsumables(lolItems: Item[]) {
   );
 }
 
-function filterStarter(lolItems: Item[]) {
+function getStarterItems(lolItems: Item[]) {
   const tagsInclude = ["Lane", "Jungle"];
   const tagsExclude = ["Consumable"];
 
@@ -287,7 +287,7 @@ function filterStarter(lolItems: Item[]) {
   return uniqueStarterItems;
 }
 
-function filterBasic(lolItems: Item[]) {
+function getBasicItems(lolItems: Item[]) {
   return lolItems
     .filter((item) => {
       return !item.from;
@@ -303,7 +303,7 @@ function filterBasic(lolItems: Item[]) {
     });
 }
 
-function filterEpic(lolItems: Item[]) {
+function getEpicItems(lolItems: Item[]) {
   return lolItems
     .filter((item) => {
       return item.depth === 2 || item.consumeOnFull === true;
@@ -319,7 +319,7 @@ function filterEpic(lolItems: Item[]) {
     });
 }
 
-function filterLengedary(lolItems: Item[]) {
+function getLengedaryItems(lolItems: Item[]) {
   return lolItems
     .filter((item) => {
       return !item.into && item.from;
