@@ -129,12 +129,12 @@ const initialState = {
 };
 
 const ACTION = {
-  SET_ITEMS: "set_items",
+  SET_ITEMS: "set-items",
 } as const;
 
 type State = { lolItems: Item[] };
 
-type Action = { type: "set_items"; dataItems: Item[] };
+type Action = { type: "set-items"; dataItems: Item[] };
 
 function itemsReducer(state: State, action: Action) {
   switch (action.type) {
@@ -156,7 +156,6 @@ export default function () {
           return response.json();
         })
         .then((data) => {
-          console.log("DATA", data);
           const itemsData = v.parse(ItemsResponseSchema, data);
 
           const dataSchema = v.parse(
@@ -190,7 +189,7 @@ export default function () {
             )
             .sort((a, b) => a.gold.total - b.gold.total);
 
-          dispatch({ type: "set_items", dataItems: lolItems });
+          dispatch({ type: "set-items", dataItems: lolItems });
         });
     }
     fetchLolItems();
@@ -239,6 +238,11 @@ export default function () {
     </>
   );
 }
+
+// Do a handleClick
+
+// Put an onClick
+// djK
 
 function Card(item: Item) {
   return (
