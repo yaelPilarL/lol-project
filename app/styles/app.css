@@ -1,37 +1,41 @@
-h1 {
+.title {
   text-align: center;
+  margin-bottom: 0px;
 }
 
-.container {
+.container-wrapper {
   display: flex;
-  flex-direction: column;
-  padding: 5px;
+  justify-content: space-between;
+  gap: 80px;
 }
 
-.container > div {
-  border-radius: 12px;
+.items-grid {
+  flex: 2;
   padding: 10px;
 }
 
-.container h2 {
-  font-size: 1.5rem;
-  text-align: left;
+.store-grid {
+  flex: 1;
+  padding: 10px;
 }
 
-ul {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-  gap: 10px;
+.items-grid ul {
   list-style: none;
   padding: 0;
-  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  gap: 5px;
 }
 
-li {
+.item-card {
   text-align: center;
+  margin-bottom: 20px;
 }
 
-li img {
-  width: 64px;
-  height: 64px;
+.item-card img {
+  width: 100%;
+  height: auto;
+  max-width: 85px;
+  display: block;
+  margin: 0 auto 5px auto;
 }

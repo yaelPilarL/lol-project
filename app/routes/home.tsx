@@ -205,31 +205,36 @@ export default function () {
 
   return (
     <>
-      <h1>League Of Legends Shop</h1>
-      <div className="container">
-        {state.lolItems.length > 0 ? (
-          <>
-            <h2>Boots</h2>
-            <ul>{bootItems.map((item) => Card(item))}</ul>
+      <h1 className="title">League Of Legends Shop</h1>
+      <div className="container-wrapper">
+        <div className="items-grid">
+          {state.lolItems.length > 0 ? (
+            <>
+              <h2>Boots</h2>
+              <ul>{bootItems.map((item) => Card(item))}</ul>
 
-            <h2>Consumable</h2>
-            <ul>{consumableItems.map((item) => Card(item))}</ul>
+              <h2>Consumable</h2>
+              <ul>{consumableItems.map((item) => Card(item))}</ul>
 
-            <h2>Starter</h2>
-            <ul>{starterItems.map((item) => Card(item))}</ul>
+              <h2>Starter</h2>
+              <ul>{starterItems.map((item) => Card(item))}</ul>
 
-            <h2>Basic</h2>
-            <ul>{basicItems.map((item) => Card(item))}</ul>
+              <h2>Basic</h2>
+              <ul>{basicItems.map((item) => Card(item))}</ul>
 
-            <h2>Epic</h2>
-            <ul>{epicItems.map((item) => Card(item))}</ul>
+              <h2>Epic</h2>
+              <ul>{epicItems.map((item) => Card(item))}</ul>
 
-            <h2>Legendary</h2>
-            <ul>{legendaryItems.map((item) => Card(item))}</ul>
-          </>
-        ) : (
-          <p>Without items...</p>
-        )}
+              <h2>Legendary</h2>
+              <ul>{legendaryItems.map((item) => Card(item))}</ul>
+            </>
+          ) : (
+            <p>Without items...</p>
+          )}
+        </div>
+        <div className="store-grid">
+          <h1>hola</h1>
+        </div>
       </div>
     </>
   );
@@ -244,9 +249,9 @@ function Card(item: Item) {
           alt={item.name}
         />
         <p className="item-name">{item.name}</p>
-        <p className="item-gold">
+        <span className="item-gold">
           <b>{item.gold.total}</b>
-        </p>
+        </span>
       </section>
     </li>
   );
@@ -278,6 +283,13 @@ function getStarterItems(lolItems: Item[]) {
     })
     .filter((item) => {
       return !item.from && item.gold.base > 0;
+    })
+    .filter((item) => {
+      return !(
+        item.tags.length === 2 &&
+        item.tags.includes("Damage") &&
+        item.tags.includes("Lane")
+      );
     });
 
   const uniqueStarterItems = Array.from(
