@@ -126,20 +126,27 @@ const DataSchema = v.tuple([v.string(), ItemDetailsSchema]);
 
 const initialState = {
   lolItems: [],
+  selectedItem: null,
 };
 
 const ACTION = {
   SET_ITEMS: "set-items",
+  SET_SELECTED_ITEM: "set-selected-item",
 } as const;
 
-type State = { lolItems: Item[] };
+type State = { lolItems: Item[]; selectedItem: Item | null };
 
-type Action = { type: "set-items"; dataItems: Item[] };
+type Action =
+  | { type: "set-items"; dataItems: Item[] }
+  | { type: "set-selected-item"; selectedItem: Item };
 
 function itemsReducer(state: State, action: Action) {
   switch (action.type) {
     case ACTION.SET_ITEMS: {
       return { ...state, lolItems: action.dataItems };
+    }
+    case ACTION.SET_SELECTED_ITEM: {
+      return { ...state, selectedItem: action.selectedItem };
     }
   }
 }
@@ -195,6 +202,12 @@ export default function () {
     fetchLolItems();
   }, []);
 
+  const handleClick = (item: Item) => {
+    dispatch({ type: "set-selected-item", selectedItem: item });
+  };
+
+  console.log("selectedItem", state.selectedItem);
+
   const bootItems = getBootItems(state.lolItems);
   const consumableItems = getConsumableItems(state.lolItems);
   const starterItems = getStarterItems(state.lolItems);
@@ -210,52 +223,61 @@ export default function () {
           {state.lolItems.length > 0 ? (
             <>
               <h2>Boots</h2>
-              <ul>{bootItems.map((item) => Card(item))}</ul>
+              <ul>{bootItems.map((item) => Card(item, handleClick))}</ul>
 
               <h2>Consumable</h2>
-              <ul>{consumableItems.map((item) => Card(item))}</ul>
+              <ul>{consumableItems.map((item) => Card(item, handleClick))}</ul>
 
               <h2>Starter</h2>
-              <ul>{starterItems.map((item) => Card(item))}</ul>
+              <ul>{starterItems.map((item) => Card(item, handleClick))}</ul>
 
               <h2>Basic</h2>
-              <ul>{basicItems.map((item) => Card(item))}</ul>
+              <ul>{basicItems.map((item) => Card(item, handleClick))}</ul>
 
               <h2>Epic</h2>
-              <ul>{epicItems.map((item) => Card(item))}</ul>
+              <ul>{epicItems.map((item) => Card(item, handleClick))}</ul>
 
               <h2>Legendary</h2>
-              <ul>{legendaryItems.map((item) => Card(item))}</ul>
+              <ul>{legendaryItems.map((item) => Card(item, handleClick))}</ul>
             </>
           ) : (
             <p>Without items...</p>
           )}
         </div>
         <div className="store-grid">
-          <h1>hola</h1>
+          {state.selectedItem ? storeCard(state.selectedItem) : <h2>STORE</h2>}
         </div>
       </div>
     </>
   );
 }
 
-// Do a handleClick
+function storeCard(selectedItem: Item) {
+  return (
+    <div className="item-card">
+      <img
+        src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${selectedItem.image.full}`}
+        alt={selectedItem.name}
+      />
+      <p>{selectedItem.name}</p>
+    </div>
+  );
+}
 
-// Put an onClick
-// djK
-
-function Card(item: Item) {
+function Card(item: Item, handleClick: (item: Item) => void) {
   return (
     <li key={item.id} className="item-card">
       <section>
-        <img
-          src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
-          alt={item.name}
-        />
-        <p className="item-name">{item.name}</p>
-        <span className="item-gold">
-          <b>{item.gold.total}</b>
-        </span>
+        <button type="button" onClick={() => handleClick(item)}>
+          <img
+            src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
+            alt={item.name}
+          />
+          <p className="item-name">{item.name}</p>
+          <span className="item-gold">
+            <b>{item.gold.total}</b>
+          </span>
+        </button>
       </section>
     </li>
   );
