@@ -3,10 +3,17 @@
   margin-bottom: 0px;
 }
 
+.build-item {
+  margin-bottom: 15px;
+}
+
 .container-wrapper {
   display: flex;
   justify-content: space-between;
   gap: 80px;
+}
+.item-gold {
+  margin-top: 70px;
 }
 
 .items-grid {
@@ -15,7 +22,7 @@
 }
 
 .store-grid {
-  margin-top: 50px;
+  margin-top: 10px;
   flex: 1;
   padding: 10px;
   justify-content: center;
@@ -31,7 +38,6 @@
 
 .item-card {
   text-align: center;
-  margin-bottom: 20px;
 }
 
 .item-card img {

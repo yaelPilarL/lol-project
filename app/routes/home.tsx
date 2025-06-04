@@ -217,7 +217,7 @@ export default function () {
 
   return (
     <>
-      <h1 className="title">League Of Legends Shop</h1>
+      <h1 className="title">League Of Legends</h1>
       <div className="container-wrapper">
         <div className="items-grid">
           {state.lolItems.length > 0 ? (
@@ -245,22 +245,20 @@ export default function () {
           )}
         </div>
         <div className="store-grid">
-          {state.selectedItem ? storeCard(state.selectedItem) : <h2>STORE</h2>}
+          <h2 className="title">STORE</h2>
+          {state.selectedItem ? (
+            <div className="item-card">
+              <img
+                src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${state.selectedItem.image.full}`}
+                alt={state.selectedItem.name}
+              />
+
+              <p>{state.selectedItem.gold.total}</p>
+            </div>
+          ) : null}
         </div>
       </div>
     </>
-  );
-}
-
-function storeCard(selectedItem: Item) {
-  return (
-    <div className="item-card">
-      <img
-        src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${selectedItem.image.full}`}
-        alt={selectedItem.name}
-      />
-      <p>{selectedItem.name}</p>
-    </div>
   );
 }
 
@@ -273,12 +271,11 @@ function Card(item: Item, handleClick: (item: Item) => void) {
             src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
             alt={item.name}
           />
-          <p className="item-name">{item.name}</p>
-          <span className="item-gold">
-            <b>{item.gold.total}</b>
-          </span>
         </button>
       </section>
+      <span className="item-gold">
+        <b>{item.gold.total}</b>
+      </span>
     </li>
   );
 }
