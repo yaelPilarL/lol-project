@@ -246,19 +246,64 @@ export default function () {
         </div>
         <div className="store-grid">
           <h2 className="title">STORE</h2>
-          {state.selectedItem ? (
-            <div className="item-card">
-              <img
-                src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${state.selectedItem.image.full}`}
-                alt={state.selectedItem.name}
-              />
-
-              <p>{state.selectedItem.gold.total}</p>
-            </div>
-          ) : null}
+          {state.selectedItem
+            ? storeCard(state.selectedItem, state.lolItems)
+            : null}
         </div>
       </div>
     </>
+  );
+}
+
+function storeCard(selectedItem: Item, lolItems: Item[]) {
+  const findItemById = (id: number) => lolItems.find((item) => item.id === id);
+
+  return (
+    <div className="item-card">
+      <div className="selected-item">
+        <img
+          src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${selectedItem.image.full}`}
+          alt={selectedItem.name}
+        />
+        <p>{selectedItem.gold.total}</p>
+      </div>
+
+      {selectedItem.from && selectedItem.from.length > 0 ? (
+        <div className="item-from">
+          <h3>From</h3>
+          {selectedItem.from.map((itemId) => {
+            const item = findItemById(itemId);
+            return item ? (
+              <div key={item.id} className="build-item">
+                <img
+                  src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
+                  alt={item.name}
+                />
+                <span>{item.gold.total}</span>
+              </div>
+            ) : null;
+          })}
+        </div>
+      ) : null}
+
+      {selectedItem.into && selectedItem.into.length > 0 ? (
+        <div className="item-into">
+          <h3>Into</h3>
+          {selectedItem.into.map((itemId) => {
+            const item = findItemById(itemId);
+            return item ? (
+              <div key={item.id} className="build-item">
+                <img
+                  src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
+                  alt={item.name}
+                />
+                <span>{item.gold.total}</span>
+              </div>
+            ) : null;
+          })}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
