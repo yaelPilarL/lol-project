@@ -8,18 +8,29 @@ type Item = v.InferOutput<typeof ItemSchema>;
 const initialState = {
   lolItems: [],
   selectedItem: null,
+  purchasedItem: [],
+  gold: 20000,
 };
 
 const ACTION = {
   SET_ITEMS: "set-items",
   SET_SELECTED_ITEM: "set-selected-item",
+  PURCHASE_ITEM: "purchase-item",
+  AVAILABLE_GOLD: "available-gold",
 } as const;
 
-type State = { lolItems: Item[]; selectedItem: Item | null };
+type State = {
+  lolItems: Item[];
+  selectedItem: Item | null;
+  purchasedItem: Item[];
+  gold: number;
+};
 
 type Action =
   | { type: "set-items"; dataItems: Item[] }
-  | { type: "set-selected-item"; selectedItem: Item };
+  | { type: "set-selected-item"; selectedItem: Item }
+  | { type: "purchase-item"; purchasedItem: Item }
+  | { type: "available-gold"; gold: number };
 
 function itemsReducer(state: State, action: Action) {
   switch (action.type) {
@@ -28,6 +39,15 @@ function itemsReducer(state: State, action: Action) {
     }
     case ACTION.SET_SELECTED_ITEM: {
       return { ...state, selectedItem: action.selectedItem };
+    }
+    case ACTION.PURCHASE_ITEM: {
+      return {
+        ...state,
+        purchasedItem: [...state.purchasedItem, action.purchasedItem],
+      };
+    }
+    case ACTION.AVAILABLE_GOLD: {
+      return { ...state, gold: action.gold };
     }
   }
 }
@@ -87,7 +107,21 @@ export default function () {
     dispatch({ type: "set-selected-item", selectedItem: item });
   };
 
-  console.log("selectedItem", state.selectedItem);
+  const handleClickPurchase = (item: Item) => {
+    const isPurchased = state.purchasedItem.some(
+      (purchased) => purchased.id === item.id,
+    );
+
+    if (!isPurchased && item.gold.total <= state.gold) {
+      const currentGold = state.gold - item.gold.total;
+
+      dispatch({ type: ACTION.PURCHASE_ITEM, purchasedItem: item });
+
+      dispatch({ type: ACTION.AVAILABLE_GOLD, gold: currentGold });
+    }
+  };
+
+  console.log("STATE", state);
 
   const bootItems = getBootItems(state.lolItems);
   const consumableItems = getConsumableItems(state.lolItems);
@@ -104,40 +138,89 @@ export default function () {
           {state.lolItems.length > 0 ? (
             <>
               <h2>Boots</h2>
-              <ul>{bootItems.map((item) => Card(item, handleClick))}</ul>
+              <ul>{bootItems.map((item) => itemCard(item, handleClick))}</ul>
 
               <h2>Consumable</h2>
-              <ul>{consumableItems.map((item) => Card(item, handleClick))}</ul>
+              <ul>
+                {consumableItems.map((item) => itemCard(item, handleClick))}
+              </ul>
 
               <h2>Starter</h2>
-              <ul>{starterItems.map((item) => Card(item, handleClick))}</ul>
+              <ul>{starterItems.map((item) => itemCard(item, handleClick))}</ul>
 
               <h2>Basic</h2>
-              <ul>{basicItems.map((item) => Card(item, handleClick))}</ul>
+              <ul>{basicItems.map((item) => itemCard(item, handleClick))}</ul>
 
               <h2>Epic</h2>
-              <ul>{epicItems.map((item) => Card(item, handleClick))}</ul>
+              <ul>{epicItems.map((item) => itemCard(item, handleClick))}</ul>
 
               <h2>Legendary</h2>
-              <ul>{legendaryItems.map((item) => Card(item, handleClick))}</ul>
+              <ul>
+                {legendaryItems.map((item) => itemCard(item, handleClick))}
+              </ul>
             </>
           ) : (
             <p>Without items...</p>
           )}
         </div>
+
         <div className="store-grid">
-          <h2 className="title">STORE</h2>
+          <h2 className="title-store">STORE</h2>
+
+          <div className="available-gold">
+            <p>{state.gold}</p>
+          </div>
+
           {state.selectedItem
-            ? storeCard(state.selectedItem, state.lolItems)
+            ? storeItemCard(
+                state.selectedItem,
+                state.lolItems,
+                handleClickPurchase,
+                state.purchasedItem,
+                state.gold,
+              )
             : null}
+        </div>
+
+        <div className="inventory-grid">
+          <h2 className="title-inventory">Inventory</h2>
+          {state.purchasedItem && state.purchasedItem.length > 0 ? (
+            <div className="inventory-items">
+              {state.purchasedItem.map((item) => {
+                return item ? (
+                  <div key={item.id} className="item-card">
+                    <img
+                      src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
+                      alt={item.name}
+                    />
+                    <p>{item.gold.total}</p>
+                  </div>
+                ) : null;
+              })}
+            </div>
+          ) : (
+            <p className="empty-inventory-message">Your inventory is empty.</p>
+          )}
         </div>
       </div>
     </>
   );
 }
 
-function storeCard(selectedItem: Item, lolItems: Item[]) {
+function storeItemCard(
+  selectedItem: Item,
+  lolItems: Item[],
+  handleClickPurchase: (item: Item) => void,
+  purchasedItem: Item[],
+  gold: number,
+) {
   const findItemById = (id: number) => lolItems.find((item) => item.id === id);
+
+  const isPurchased = purchasedItem.some(
+    (purchasedId) => purchasedId.id === selectedItem.id,
+  );
+
+  const hasEnoughGold = selectedItem.gold.total <= gold;
 
   return (
     <div className="item-card">
@@ -149,13 +232,25 @@ function storeCard(selectedItem: Item, lolItems: Item[]) {
         <p>{selectedItem.gold.total}</p>
       </div>
 
+      <button
+        type="button"
+        className={
+          isPurchased || !hasEnoughGold
+            ? "unavailable-button"
+            : "available-button"
+        }
+        onClick={() => handleClickPurchase(selectedItem)}
+      >
+        Purchase Item
+      </button>
+
       {selectedItem.from && selectedItem.from.length > 0 ? (
         <div className="item-from">
           <h3>From</h3>
-          {selectedItem.from.map((itemId) => {
+          {[...new Set(selectedItem.from)].map((itemId) => {
             const item = findItemById(itemId);
             return item ? (
-              <div key={item.id} className="build-item">
+              <div key={item.id} className="item-card">
                 <img
                   src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
                   alt={item.name}
@@ -170,10 +265,10 @@ function storeCard(selectedItem: Item, lolItems: Item[]) {
       {selectedItem.into && selectedItem.into.length > 0 ? (
         <div className="item-into">
           <h3>Into</h3>
-          {selectedItem.into.map((itemId) => {
+          {[...new Set(selectedItem.into)].map((itemId) => {
             const item = findItemById(itemId);
             return item ? (
-              <div key={item.id} className="build-item">
+              <div key={item.id} className="item-card">
                 <img
                   src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
                   alt={item.name}
@@ -188,20 +283,22 @@ function storeCard(selectedItem: Item, lolItems: Item[]) {
   );
 }
 
-function Card(item: Item, handleClick: (item: Item) => void) {
+function itemCard(item: Item, handleClick: (item: Item) => void) {
   return (
     <li key={item.id} className="item-card">
       <section>
-        <button type="button" onClick={() => handleClick(item)}>
+        <button
+          className="item-button"
+          type="button"
+          onClick={() => handleClick(item)}
+        >
           <img
             src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
             alt={item.name}
           />
         </button>
       </section>
-      <span className="item-gold">
-        <b>{item.gold.total}</b>
-      </span>
+      <span>{item.gold.total}</span>
     </li>
   );
 }

@@ -1,31 +1,42 @@
+.title-inventory,
+.title-store,
 .title {
   text-align: center;
-  margin-bottom: 0px;
+  margin-bottom: 20px;
 }
 
-.build-item {
-  margin-bottom: 15px;
+.title-inventory,
+.title-store {
+  margin: 0;
+  padding: 5px 0;
+  text-align: center;
 }
 
 .container-wrapper {
   display: flex;
   justify-content: space-between;
-  gap: 80px;
-}
-.item-gold {
-  margin-top: 70px;
+  align-items: stretch;
+  gap: 20px;
 }
 
 .items-grid {
   flex: 2;
+  display: flex;
+  flex-direction: column;
   padding: 10px;
 }
 
+.items-grid h2 {
+  margin: 0;
+  padding: 5px 0;
+}
+
 .store-grid {
-  margin-top: 10px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
   padding: 10px;
-  justify-content: center;
+  gap: 15px;
 }
 
 .items-grid ul {
@@ -34,6 +45,15 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
   gap: 5px;
+  margin: 0;
+}
+
+.inventory-grid {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  align-items: center;
 }
 
 .item-card {
@@ -49,11 +69,44 @@
   cursor: pointer;
 }
 
-button {
+.item-button {
   border: none;
   background: transparent;
   padding: 0;
   margin: 0;
   text-decoration: none;
   appearance: none;
+}
+
+.available-button {
+  width: 90%;
+  height: 40px;
+  cursor: pointer;
+  background: rgb(255, 215, 0);
+  font-size: 1rem;
+}
+
+.unavailable-button {
+  width: 90%;
+  height: 40px;
+  cursor: default;
+  background: rgb(178, 162, 70);
+  font-size: 1rem;
+}
+
+.available-gold {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  width: 100%;
+  height: 40px;
+  cursor: pointer;
+  background: rgb(255, 215, 0);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.available-gold p {
+  font-size: 1.5rem;
+  margin: 0;
 }
