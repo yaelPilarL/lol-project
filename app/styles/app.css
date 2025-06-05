@@ -84,6 +84,7 @@
   cursor: pointer;
   background: rgb(255, 215, 0);
   font-size: 1rem;
+  margin-bottom: 5px;
 }
 
 .unavailable-button {
@@ -92,6 +93,7 @@
   cursor: default;
   background: rgb(178, 162, 70);
   font-size: 1rem;
+  margin-bottom: 5px;
 }
 
 .available-gold {

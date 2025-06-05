@@ -178,6 +178,7 @@ export default function () {
                 handleClickPurchase,
                 state.purchasedItem,
                 state.gold,
+                handleClick,
               )
             : null}
         </div>
@@ -213,6 +214,7 @@ function storeItemCard(
   handleClickPurchase: (item: Item) => void,
   purchasedItem: Item[],
   gold: number,
+  handleClick: (item: Item) => void,
 ) {
   const findItemById = (id: number) => lolItems.find((item) => item.id === id);
 
@@ -231,7 +233,6 @@ function storeItemCard(
         />
         <p>{selectedItem.gold.total}</p>
       </div>
-
       <button
         type="button"
         className={
@@ -244,6 +245,10 @@ function storeItemCard(
         Purchase Item
       </button>
 
+      <button type="button" className="available-button">
+        Sell
+      </button>
+
       {selectedItem.from && selectedItem.from.length > 0 ? (
         <div className="item-from">
           <h3>From</h3>
@@ -251,17 +256,22 @@ function storeItemCard(
             const item = findItemById(itemId);
             return item ? (
               <div key={item.id} className="item-card">
-                <img
-                  src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
-                  alt={item.name}
-                />
-                <span>{item.gold.total}</span>
+                <button
+                  className="item-button"
+                  type="button"
+                  onClick={() => handleClick(item)}
+                >
+                  <img
+                    src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
+                    alt={item.name}
+                  />
+                  <span>{item.gold.total}</span>
+                </button>
               </div>
             ) : null;
           })}
         </div>
       ) : null}
-
       {selectedItem.into && selectedItem.into.length > 0 ? (
         <div className="item-into">
           <h3>Into</h3>
@@ -269,11 +279,17 @@ function storeItemCard(
             const item = findItemById(itemId);
             return item ? (
               <div key={item.id} className="item-card">
-                <img
-                  src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
-                  alt={item.name}
-                />
-                <span>{item.gold.total}</span>
+                <button
+                  className="item-button"
+                  type="button"
+                  onClick={() => handleClick(item)}
+                >
+                  <img
+                    src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
+                    alt={item.name}
+                  />
+                  <span>{item.gold.total}</span>
+                </button>
               </div>
             ) : null;
           })}
