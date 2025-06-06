@@ -98,10 +98,10 @@
 
 .available-gold {
   margin-top: 0px;
+  cursor: default;
   margin-bottom: 0px;
   width: 100%;
   height: 40px;
-  cursor: pointer;
   background: rgb(255, 215, 0);
   display: flex;
   justify-content: center;
