@@ -19,14 +19,16 @@ const initialState = {
   purchasedItem: [],
   gold: 20000,
   soldItems: [],
+  itemsInventory: [],
 };
 
 const ACTION = {
   SET_ITEMS: "set-items",
   SET_SELECTED_ITEM: "set-selected-item",
-  PURCHASE_ITEM: "purchase-item",
+  PURCHASED_ITEMS: "purchased-items",
   AVAILABLE_GOLD: "available-gold",
   SOLD_ITEMS: "sold-items",
+  INVENTORY_ITEMS: "inventory-items",
 } as const;
 
 type State = {
@@ -35,14 +37,16 @@ type State = {
   purchasedItem: Item[];
   gold: number;
   soldItems: Item[];
+  itemsInventory: Item[];
 };
 
 type Action =
   | { type: "set-items"; dataItems: Item[] }
   | { type: "set-selected-item"; selectedItem: Item }
-  | { type: "purchase-item"; purchasedItem: Item }
+  | { type: "purchased-items"; purchasedItem: Item[] }
   | { type: "available-gold"; gold: number }
-  | { type: "sold-items"; soldItems: Item };
+  | { type: "sold-items"; soldItems: Item[] }
+  | { type: "inventory-items"; itemsInventory: Item[] };
 
 function itemsReducer(state: State, action: Action) {
   switch (action.type) {
@@ -52,17 +56,17 @@ function itemsReducer(state: State, action: Action) {
     case ACTION.SET_SELECTED_ITEM: {
       return { ...state, selectedItem: action.selectedItem };
     }
-    case ACTION.PURCHASE_ITEM: {
-      return {
-        ...state,
-        purchasedItem: [...state.purchasedItem, action.purchasedItem],
-      };
+    case ACTION.PURCHASED_ITEMS: {
+      return { ...state, purchasedItem: action.purchasedItem };
     }
     case ACTION.AVAILABLE_GOLD: {
       return { ...state, gold: action.gold };
     }
     case ACTION.SOLD_ITEMS: {
-      return { ...state, soldItems: [...state.soldItems, action.soldItems] };
+      return { ...state, soldItems: action.soldItems };
+    }
+    case ACTION.INVENTORY_ITEMS: {
+      return { ...state, itemsInventory: action.itemsInventory };
     }
   }
 }
@@ -124,29 +128,57 @@ export default function () {
 
   const handleClickPurchase = (item: Item) => {
     const isPurchased = state.purchasedItem.some(
-      (purchased) => purchased.id === item.id,
+      (itemId) => itemId.id === item.id,
     );
+    const isInInventory = state.itemsInventory.some(
+      (itemId) => itemId.id === item.id,
+    );
+    const updatedGold = state.gold - item.gold.total;
 
-    if (!isPurchased && item.gold.total <= state.gold) {
-      const currentGold = state.gold - item.gold.total;
+    if (!isInInventory) {
+      if (updatedGold >= 0) {
+        if (!isPurchased) {
+          dispatch({
+            type: ACTION.PURCHASED_ITEMS,
+            purchasedItem: [...state.purchasedItem, item],
+          });
+        }
 
-      dispatch({ type: ACTION.PURCHASE_ITEM, purchasedItem: item });
-      dispatch({ type: ACTION.AVAILABLE_GOLD, gold: currentGold });
+        dispatch({ type: ACTION.AVAILABLE_GOLD, gold: updatedGold });
+
+        dispatch({
+          type: ACTION.INVENTORY_ITEMS,
+          itemsInventory: [...state.itemsInventory, item],
+        });
+      }
     }
   };
 
   const handleClickSell = (item: Item) => {
     const isPurchased = state.purchasedItem.some(
-      (purchased) => purchased.id === item.id,
+      (itemId) => itemId.id === item.id,
+    );
+    const isInInventory = state.itemsInventory.some(
+      (itemId) => itemId.id === item.id,
+    );
+    const updatedGold = state.gold + item.gold.sell;
+
+    const updatedInventory = state.itemsInventory.filter(
+      (itemId) => itemId.id !== item.id,
     );
 
-    if (isPurchased) {
-      const currentGold = state.gold + item.gold.sell;
+    if (isPurchased && isInInventory) {
+      dispatch({ type: ACTION.AVAILABLE_GOLD, gold: updatedGold });
 
-      if (currentGold <= 20000) {
-        dispatch({ type: ACTION.AVAILABLE_GOLD, gold: currentGold });
-        dispatch({ type: ACTION.SOLD_ITEMS, soldItems: item });
-      }
+      dispatch({
+        type: ACTION.INVENTORY_ITEMS,
+        itemsInventory: updatedInventory,
+      });
+
+      dispatch({
+        type: ACTION.SOLD_ITEMS,
+        soldItems: [...state.soldItems, item],
+      });
     }
   };
 
@@ -204,9 +236,9 @@ export default function () {
             ? storeItemCard(
                 state.selectedItem,
                 state.lolItems,
-                handleClickPurchase,
-                state.purchasedItem,
                 state.gold,
+                state.itemsInventory,
+                handleClickPurchase,
                 handleClick,
                 handleClickSell,
               )
@@ -215,26 +247,10 @@ export default function () {
 
         <div className="inventory-grid">
           <h2 className="title-inventory">Inventory</h2>
-          {state.purchasedItem && state.purchasedItem.length > 0 ? (
-            <div className="inventory-items">
-              {state.purchasedItem.map((item) => {
-                return item ? (
-                  <div key={item.id} className="item-card">
-                    <button
-                      className="item-button"
-                      type="button"
-                      onClick={() => handleClick(item)}
-                    >
-                      <img
-                        src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
-                        alt={item.name}
-                      />
-                      <p>{item.gold.total}</p>
-                    </button>
-                  </div>
-                ) : null;
-              })}
-            </div>
+          {state.itemsInventory.length > 0 ? (
+            <ul className="inventory-items">
+              {state.itemsInventory.map((item) => itemCard(item, handleClick))}
+            </ul>
           ) : (
             <p className="empty-inventory-message">Your inventory is empty.</p>
           )}
@@ -247,45 +263,40 @@ export default function () {
 function storeItemCard(
   selectedItem: Item,
   lolItems: Item[],
-  handleClickPurchase: (item: Item) => void,
-  purchasedItem: Item[],
   gold: number,
+  itemsInventory: Item[],
+  handleClickPurchase: (item: Item) => void,
   handleClick: (item: Item) => void,
   handleClickSell: (item: Item) => void,
 ) {
   const findItemById = (id: number) => lolItems.find((item) => item.id === id);
 
-  const isPurchased = purchasedItem.some(
-    (purchasedId) => purchasedId.id === selectedItem.id,
+  const isInInventory = itemsInventory.some(
+    (itemId) => itemId.id === selectedItem.id,
   );
 
-  const hasEnoughGold = selectedItem.gold.total <= gold;
+  const hasGold = selectedItem.gold.total <= gold;
 
   return (
     <div className="item-card">
-      <div className="selected-item">
-        <img
-          src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${selectedItem.image.full}`}
-          alt={selectedItem.name}
-        />
-        <p>{selectedItem.gold.total}</p>
-      </div>
+      <div className="selected-item">{itemCard(selectedItem, handleClick)}</div>
+
       <button
         type="button"
         className={
-          isPurchased || !hasEnoughGold
-            ? "unavailable-button"
-            : "available-button"
+          isInInventory || !hasGold ? "unavailable-button" : "available-button"
         }
         onClick={() => handleClickPurchase(selectedItem)}
+        disabled={!hasGold || isInInventory}
       >
         Purchase Item
       </button>
 
       <button
         type="button"
-        className={isPurchased ? "available-button" : "unavailable-button"}
+        className={!isInInventory ? "unavailable-button" : "available-button"}
         onClick={() => handleClickSell(selectedItem)}
+        disabled={!isInInventory}
       >
         Sell
       </button>
@@ -293,48 +304,32 @@ function storeItemCard(
       {selectedItem.from && selectedItem.from.length > 0 ? (
         <div className="item-from">
           <h3>From</h3>
-          {[...new Set(selectedItem.from)].map((itemId) => {
-            const item = findItemById(itemId);
-            return item ? (
-              <div key={item.id} className="item-card">
-                <button
-                  className="item-button"
-                  type="button"
-                  onClick={() => handleClick(item)}
-                >
-                  <img
-                    src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
-                    alt={item.name}
-                  />
-                  <span>{item.gold.total}</span>
-                </button>
-              </div>
-            ) : null;
-          })}
+          <ul className="store-items">
+            {[...new Set(selectedItem.from)].map((itemId) => {
+              const item = findItemById(itemId);
+              return item ? (
+                <li key={item.id} className="store-items">
+                  {itemCard(item, handleClick)}
+                </li>
+              ) : null;
+            })}
+          </ul>
         </div>
       ) : null}
 
       {selectedItem.into && selectedItem.into.length > 0 ? (
         <div className="item-into">
           <h3>Into</h3>
-          {[...new Set(selectedItem.into)].map((itemId) => {
-            const item = findItemById(itemId);
-            return item ? (
-              <div key={item.id} className="item-card">
-                <button
-                  className="item-button"
-                  type="button"
-                  onClick={() => handleClick(item)}
-                >
-                  <img
-                    src={`https://ddragon.leagueoflegends.com/cdn/14.19.1/img/item/${item.image.full}`}
-                    alt={item.name}
-                  />
-                  <span>{item.gold.total}</span>
-                </button>
-              </div>
-            ) : null;
-          })}
+          <ul className="store-items">
+            {[...new Set(selectedItem.into)].map((itemId) => {
+              const item = findItemById(itemId);
+              return item ? (
+                <li key={item.id} className="store-items">
+                  {itemCard(item, handleClick)}
+                </li>
+              ) : null;
+            })}
+          </ul>
         </div>
       ) : null}
     </div>

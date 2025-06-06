@@ -56,8 +56,17 @@
   align-items: center;
 }
 
+.inventory-items,
+.store-items,
+.selected-item {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
 .item-card {
   text-align: center;
+  margin-bottom: 10px;
 }
 
 .item-card img {
