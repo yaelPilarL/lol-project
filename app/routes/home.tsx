@@ -123,7 +123,6 @@ export default function () {
       const currentGold = state.gold - item.gold.total;
 
       dispatch({ type: ACTION.PURCHASE_ITEM, purchasedItem: item });
-
       dispatch({ type: ACTION.AVAILABLE_GOLD, gold: currentGold });
     }
   };
@@ -134,7 +133,7 @@ export default function () {
     );
 
     if (isPurchased) {
-      const currentGold = state.gold + item.gold.total;
+      const currentGold = state.gold + item.gold.sell;
 
       if (currentGold <= 20000) {
         dispatch({ type: ACTION.AVAILABLE_GOLD, gold: currentGold });
