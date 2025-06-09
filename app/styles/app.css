@@ -96,15 +96,6 @@
   margin-bottom: 5px;
 }
 
-.unavailable-button {
-  width: 90%;
-  height: 40px;
-  cursor: default;
-  background: rgb(178, 162, 70);
-  font-size: 1rem;
-  margin-bottom: 5px;
-}
-
 .available-gold {
   margin-top: 0px;
   cursor: default;
