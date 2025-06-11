@@ -13,6 +13,7 @@ const ACTION = {
 export type HistoryEntry = {
   type: "purchase" | "sell";
   item: Item;
+  gold: number;
 };
 
 export type State = {
@@ -26,7 +27,8 @@ export type State = {
 export type Action =
   | { type: "set-items"; dataItems: Item[] }
   | { type: "set-selected-item"; selectedItem: Item }
-  | { type: "purchase-item"; purchaseItem: Item };
+  | { type: "purchase-item"; purchaseItem: Item }
+  | { type: "undo" };
 
 export function itemsReducer(state: State, action: Action) {
   switch (action.type) {
@@ -52,6 +54,7 @@ export function itemsReducer(state: State, action: Action) {
         const sellHistory: HistoryEntry = {
           type: "sell",
           item: item,
+          gold: item.gold.sell,
         };
 
         const updateHistory = [...state.history, sellHistory];
@@ -74,6 +77,7 @@ export function itemsReducer(state: State, action: Action) {
       const purchaseHistory: HistoryEntry = {
         type: "purchase",
         item: item,
+        gold: item.gold.total,
       };
 
       const updateHistory = [...state.history, purchaseHistory];
@@ -83,6 +87,32 @@ export function itemsReducer(state: State, action: Action) {
         gold: updateGold,
         itemsInventory: updateInventory,
         history: updateHistory,
+      };
+    }
+    case ACTION.UNDO: {
+      const lastStateItem = state.history[state.history.length - 1];
+
+      if (lastStateItem.type === "sell") {
+        const updateGold = state.gold - lastStateItem.gold;
+        const updateInventory = [...state.itemsInventory, lastStateItem.item];
+        return {
+          ...state,
+          history: state.history.slice(0, -1),
+          gold: Math.min(updateGold, 20000),
+          itemsInventory: updateInventory,
+        };
+      }
+
+      const updateGold = state.gold + lastStateItem.gold;
+      const updateInventory = state.itemsInventory.filter(
+        (inventoryItem) => inventoryItem.id !== lastStateItem.item.id,
+      );
+
+      return {
+        ...state,
+        history: state.history.slice(0, -1),
+        gold: updateGold,
+        itemsInventory: updateInventory,
       };
     }
   }

@@ -11,7 +11,7 @@ import {
   getStarterItems,
 } from "~/ItemsByGroups";
 
-import { itemsReducer, type Action } from "~/ItemsReducer";
+import { itemsReducer, type Action, type HistoryEntry } from "~/ItemsReducer";
 
 type Item = v.InferOutput<typeof ItemSchema>;
 
@@ -126,6 +126,7 @@ export default function () {
                 state.lolItems,
                 state.gold,
                 state.itemsInventory,
+                state.history,
                 dispatch,
               )
             : null}
@@ -151,6 +152,7 @@ function storeItemCard(
   lolItems: Item[],
   gold: number,
   itemsInventory: Item[],
+  history: HistoryEntry[],
   dispatch: React.Dispatch<Action>,
 ) {
   const findItemById = (id: number) => lolItems.find((item) => item.id === id);
@@ -193,7 +195,16 @@ function storeItemCard(
         Sell
       </button>
 
-      <button type="button" className="available-button">
+      <button
+        type="button"
+        className="available-button"
+        onClick={() =>
+          dispatch({
+            type: "undo",
+          })
+        }
+        disabled={history.length === 0}
+      >
         Undo
       </button>
 
