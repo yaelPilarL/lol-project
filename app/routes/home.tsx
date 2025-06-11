@@ -18,10 +18,9 @@ type Item = v.InferOutput<typeof ItemSchema>;
 const initialState = {
   lolItems: [],
   selectedItem: null,
-  purchasedItem: [],
   gold: 20000,
-  soldItems: [],
   itemsInventory: [],
+  history: [],
 };
 
 export default function () {
@@ -192,6 +191,10 @@ function storeItemCard(
         disabled={!isInInventory}
       >
         Sell
+      </button>
+
+      <button type="button" className="available-button">
+        Undo
       </button>
 
       {selectedItem.from && selectedItem.from.length > 0 ? (

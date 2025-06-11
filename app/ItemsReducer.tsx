@@ -7,15 +7,20 @@ const ACTION = {
   SET_ITEMS: "set-items",
   SET_SELECTED_ITEM: "set-selected-item",
   PURCHASE_ITEM: "purchase-item",
+  UNDO: "undo",
 } as const;
+
+export type HistoryEntry = {
+  type: "purchase" | "sell";
+  item: Item;
+};
 
 export type State = {
   lolItems: Item[];
   selectedItem: Item | null;
-  purchasedItem: Item[];
   gold: number;
-  soldItems: Item[];
   itemsInventory: Item[];
+  history: HistoryEntry[];
 };
 
 export type Action =
@@ -44,13 +49,18 @@ export function itemsReducer(state: State, action: Action) {
           (inventoryItem) => inventoryItem.id !== item.id,
         );
 
-        const updateSoldItems = [...state.soldItems, item];
+        const sellHistory: HistoryEntry = {
+          type: "sell",
+          item: item,
+        };
+
+        const updateHistory = [...state.history, sellHistory];
 
         return {
           ...state,
           gold: updateGold,
           itemsInventory: updateInventory,
-          soldItems: updateSoldItems,
+          history: updateHistory,
         };
       }
 
@@ -61,13 +71,18 @@ export function itemsReducer(state: State, action: Action) {
 
       const updateGold = state.gold - item.gold.total;
       const updateInventory = [...state.itemsInventory, item];
-      const updatePurchasedItems = [...state.purchasedItem, item];
+      const purchaseHistory: HistoryEntry = {
+        type: "purchase",
+        item: item,
+      };
+
+      const updateHistory = [...state.history, purchaseHistory];
 
       return {
         ...state,
         gold: updateGold,
         itemsInventory: updateInventory,
-        purchasedItem: updatePurchasedItems,
+        history: updateHistory,
       };
     }
   }
