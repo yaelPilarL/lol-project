@@ -98,7 +98,7 @@ export function itemsReducer(state: State, action: Action) {
         return {
           ...state,
           history: state.history.slice(0, -1),
-          gold: Math.min(updateGold, 20000),
+          gold: updateGold,
           itemsInventory: updateInventory,
         };
       }
