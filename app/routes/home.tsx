@@ -11,7 +11,7 @@ import {
   getStarterItems,
 } from "~/ItemsByGroups";
 
-import { itemsReducer, type Action, type HistoryEntry } from "~/ItemsReducer";
+import { itemsReducer, type Action, type History } from "~/ItemsReducer";
 
 type Item = v.InferOutput<typeof ItemSchema>;
 
@@ -152,7 +152,7 @@ function storeItemCard(
   lolItems: Item[],
   gold: number,
   itemsInventory: Item[],
-  history: HistoryEntry[],
+  history: History[],
   dispatch: React.Dispatch<Action>,
 ) {
   const findItemById = (id: number) => lolItems.find((item) => item.id === id);

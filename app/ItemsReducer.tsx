@@ -10,7 +10,7 @@ const ACTION = {
   UNDO: "undo",
 } as const;
 
-export type HistoryEntry = {
+export type History = {
   type: "purchase" | "sell";
   item: Item;
   gold: number;
@@ -21,7 +21,7 @@ export type State = {
   selectedItem: Item | null;
   gold: number;
   itemsInventory: Item[];
-  history: HistoryEntry[];
+  history: History[];
 };
 
 export type Action =
@@ -51,7 +51,7 @@ export function itemsReducer(state: State, action: Action) {
           (inventoryItem) => inventoryItem.id !== item.id,
         );
 
-        const sellHistory: HistoryEntry = {
+        const sellHistory: History = {
           type: "sell",
           item: item,
           gold: item.gold.sell,
@@ -74,7 +74,7 @@ export function itemsReducer(state: State, action: Action) {
 
       const updateGold = state.gold - item.gold.total;
       const updateInventory = [...state.itemsInventory, item];
-      const purchaseHistory: HistoryEntry = {
+      const purchaseHistory: History = {
         type: "purchase",
         item: item,
         gold: item.gold.total,
