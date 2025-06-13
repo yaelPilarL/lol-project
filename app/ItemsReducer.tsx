@@ -1,5 +1,5 @@
-import type { ItemSchema } from "./ValibotSchema";
-import type * as v from "valibot";
+import { ItemSchema } from "./ValibotSchema";
+import * as v from "valibot";
 
 type Item = v.InferOutput<typeof ItemSchema>;
 
@@ -33,7 +33,29 @@ export type Action =
 export function itemsReducer(state: State, action: Action) {
   switch (action.type) {
     case ACTION.SET_ITEMS: {
-      return { ...state, lolItems: action.dataItems };
+      const lolItemsId = action.dataItems;
+
+      const CHAMPION_EXClUSIVE_ITEM_IDS = [3599, 3600, 3330, 3901, 3902, 3903];
+      const OBSIDIAN_EDGE_ID = 1040;
+      const SHATTERED_GUARD_ID = 2421;
+
+      const FILTER_ID = [
+        ...CHAMPION_EXClUSIVE_ITEM_IDS,
+        OBSIDIAN_EDGE_ID,
+        SHATTERED_GUARD_ID,
+      ];
+
+      const lolItems = v
+        .parse(v.array(ItemSchema), lolItemsId)
+        .filter(
+          (item) =>
+            item.maps[11] === true &&
+            item.gold.purchasable === true &&
+            !FILTER_ID.includes(item.id),
+        )
+        .sort((a, b) => a.gold.total - b.gold.total);
+
+      return { ...state, lolItems: lolItems };
     }
     case ACTION.SET_SELECTED_ITEM: {
       return { ...state, selectedItem: action.selectedItem };

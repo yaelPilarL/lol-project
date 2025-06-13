@@ -76,18 +76,16 @@ export const TagLiteralSchema = v.union([
   v.literal("GoldPer"),
 ]);
 
-const itemId = v.pipe(v.string(), v.transform(Number));
-
 export const ItemSchema = v.object({
-  id: itemId,
+  id: v.number(),
   name: v.pipe(v.string(), v.minLength(1)),
   image: ImageSchema,
-  into: v.optional(v.array(itemId)),
+  into: v.optional(v.array(v.number())),
   maps: MapSchema,
   gold: GoldSchema,
   stats: v.optional(StatsSchema),
   tags: v.array(TagLiteralSchema),
-  from: v.optional(v.array(itemId)),
+  from: v.optional(v.array(v.number())),
   depth: v.optional(v.number()),
   consumed: v.optional(v.boolean()),
   consumeOnFull: v.optional(v.boolean()),

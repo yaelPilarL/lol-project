@@ -1,7 +1,13 @@
+import type React from "react";
 import { useEffect, useReducer } from "react";
 import "~/styles/app.css";
 import * as v from "valibot";
-import { ItemSchema, ItemsResponseSchema, DataSchema } from "~/ValibotSchema";
+import {
+  type ItemSchema,
+  ItemsResponseSchema,
+  DataSchema,
+  ItemDetailsSchema,
+} from "~/ValibotSchema";
 import {
   getBootItems,
   getBasicItems,
@@ -11,7 +17,12 @@ import {
   getStarterItems,
 } from "~/ItemsByGroups";
 
-import { itemsReducer, type Action, type History } from "~/ItemsReducer";
+import {
+  itemsReducer,
+  type Action,
+  type History,
+  type State,
+} from "~/ItemsReducer";
 
 type Item = v.InferOutput<typeof ItemSchema>;
 
@@ -43,32 +54,15 @@ export default function () {
           );
 
           const lolItemsId = dataSchema.map(([id, item]) => {
-            return { ...item, id };
+            return {
+              ...item,
+              id: Number(id),
+              into: item.into?.map(Number),
+              from: item.from?.map(Number),
+            };
           });
 
-          const CHAMPION_EXClUSIVE_ITEM_IDS = [
-            3599, 3600, 3330, 3901, 3902, 3903,
-          ];
-          const OBSIDIAN_EDGE_ID = 1040;
-          const SHATTERED_GUARD_ID = 2421;
-
-          const FILTER_ID = [
-            ...CHAMPION_EXClUSIVE_ITEM_IDS,
-            OBSIDIAN_EDGE_ID,
-            SHATTERED_GUARD_ID,
-          ];
-
-          const lolItems = v
-            .parse(v.array(ItemSchema), lolItemsId)
-            .filter(
-              (item) =>
-                item.maps[11] === true &&
-                item.gold.purchasable === true &&
-                !FILTER_ID.includes(item.id),
-            )
-            .sort((a, b) => a.gold.total - b.gold.total);
-
-          dispatch({ type: "set-items", dataItems: lolItems });
+          dispatch({ type: "set-items", dataItems: lolItemsId });
         });
     }
     fetchLolItems();
@@ -91,22 +85,46 @@ export default function () {
           {state.lolItems.length > 0 ? (
             <>
               <h2>Boots</h2>
-              <ul>{bootItems.map((item) => itemCard(item, dispatch))}</ul>
+              <ul>
+                {bootItems.map((item) => (
+                  <ItemCard key={item.id} item={item} dispatch={dispatch} />
+                ))}
+              </ul>
 
               <h2>Consumable</h2>
-              <ul>{consumableItems.map((item) => itemCard(item, dispatch))}</ul>
+              <ul>
+                {consumableItems.map((item) => (
+                  <ItemCard key={item.id} item={item} dispatch={dispatch} />
+                ))}
+              </ul>
 
               <h2>Starter</h2>
-              <ul>{starterItems.map((item) => itemCard(item, dispatch))}</ul>
+              <ul>
+                {starterItems.map((item) => (
+                  <ItemCard key={item.id} item={item} dispatch={dispatch} />
+                ))}
+              </ul>
 
               <h2>Basic</h2>
-              <ul>{basicItems.map((item) => itemCard(item, dispatch))}</ul>
+              <ul>
+                {basicItems.map((item) => (
+                  <ItemCard key={item.id} item={item} dispatch={dispatch} />
+                ))}
+              </ul>
 
               <h2>Epic</h2>
-              <ul>{epicItems.map((item) => itemCard(item, dispatch))}</ul>
+              <ul>
+                {epicItems.map((item) => (
+                  <ItemCard key={item.id} item={item} dispatch={dispatch} />
+                ))}
+              </ul>
 
               <h2>Legendary</h2>
-              <ul>{legendaryItems.map((item) => itemCard(item, dispatch))}</ul>
+              <ul>
+                {legendaryItems.map((item) => (
+                  <ItemCard key={item.id} item={item} dispatch={dispatch} />
+                ))}
+              </ul>
             </>
           ) : (
             <p>Without items...</p>
@@ -120,23 +138,18 @@ export default function () {
             <p>{state.gold}</p>
           </div>
 
-          {state.selectedItem
-            ? storeItemCard(
-                state.selectedItem,
-                state.lolItems,
-                state.gold,
-                state.itemsInventory,
-                state.history,
-                dispatch,
-              )
-            : null}
+          {state.selectedItem ? (
+            <StoreItemCard state={state} dispatch={dispatch} />
+          ) : null}
         </div>
 
         <div className="inventory-grid">
           <h2 className="title-inventory">Inventory</h2>
           {state.itemsInventory.length > 0 ? (
             <ul className="inventory-items">
-              {state.itemsInventory.map((item) => itemCard(item, dispatch))}
+              {state.itemsInventory.map((item) => (
+                <ItemCard key={item.id} item={item} dispatch={dispatch} />
+              ))}
             </ul>
           ) : (
             <p className="empty-inventory-message">Your inventory is empty.</p>
@@ -147,25 +160,27 @@ export default function () {
   );
 }
 
-function storeItemCard(
-  selectedItem: Item,
-  lolItems: Item[],
-  gold: number,
-  itemsInventory: Item[],
-  history: History[],
-  dispatch: React.Dispatch<Action>,
-) {
-  const findItemById = (id: number) => lolItems.find((item) => item.id === id);
+const StoreItemCard = ({
+  state,
+  dispatch,
+}: { state: State; dispatch: React.Dispatch<Action> }) => {
+  const findItemById = (id: number) =>
+    state.lolItems.find((item) => item.id === id);
 
-  const isInInventory = itemsInventory.some(
+  const selectedItem = state.selectedItem;
+  if (!selectedItem) return null;
+
+  const isInInventory = state.itemsInventory.some(
     (itemId) => itemId.id === selectedItem.id,
   );
 
-  const hasGold = selectedItem.gold.total <= gold;
+  const hasGold = selectedItem.gold.total <= state.gold;
 
   return (
     <div className="item-card">
-      <div className="selected-item">{itemCard(selectedItem, dispatch)}</div>
+      <div className="selected-item">
+        <ItemCard item={selectedItem} dispatch={dispatch} />
+      </div>
 
       <button
         type="button"
@@ -216,7 +231,7 @@ function storeItemCard(
               const item = findItemById(itemId);
               return item ? (
                 <ul key={item.id} className="store-items">
-                  {itemCard(item, dispatch)}
+                  <ItemCard item={item} dispatch={dispatch} />
                 </ul>
               ) : null;
             })}
@@ -232,7 +247,7 @@ function storeItemCard(
               const item = findItemById(itemId);
               return item ? (
                 <ul key={item.id} className="store-items">
-                  {itemCard(item, dispatch)}
+                  <ItemCard item={item} dispatch={dispatch} />
                 </ul>
               ) : null;
             })}
@@ -241,9 +256,12 @@ function storeItemCard(
       ) : null}
     </div>
   );
-}
+};
 
-function itemCard(item: Item, dispatch: React.Dispatch<Action>) {
+const ItemCard = ({
+  item,
+  dispatch,
+}: { item: Item; dispatch: React.Dispatch<Action> }) => {
   return (
     <li key={item.id} className="item-card">
       <section>
@@ -263,4 +281,4 @@ function itemCard(item: Item, dispatch: React.Dispatch<Action>) {
       <span>{item.gold.total}</span>
     </li>
   );
-}
+};
