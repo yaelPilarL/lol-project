@@ -1,4 +1,4 @@
-import { ItemSchema } from "./ValibotSchema";
+import { ItemSchema } from "./valibot-schema";
 import * as v from "valibot";
 
 type Item = v.InferOutput<typeof ItemSchema>;

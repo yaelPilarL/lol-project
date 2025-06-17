@@ -1,5 +1,5 @@
 import type * as v from "valibot";
-import type { ItemSchema } from "~/ValibotSchema";
+import type { ItemSchema } from "~/valibot-schema";
 
 type Item = v.InferOutput<typeof ItemSchema>;
 

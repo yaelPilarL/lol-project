@@ -6,8 +6,7 @@ import {
   type ItemSchema,
   ItemsResponseSchema,
   DataSchema,
-  ItemDetailsSchema,
-} from "~/ValibotSchema";
+} from "~/valibot-schema";
 import {
   getBootItems,
   getBasicItems,
@@ -15,14 +14,14 @@ import {
   getEpicItems,
   getLengedaryItems,
   getStarterItems,
-} from "~/ItemsByGroups";
+} from "~/items-by-groups";
 
 import {
   itemsReducer,
   type Action,
   type History,
   type State,
-} from "~/ItemsReducer";
+} from "~/items-reducer";
 
 type Item = v.InferOutput<typeof ItemSchema>;
 
